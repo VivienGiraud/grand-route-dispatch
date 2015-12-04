@@ -151,21 +151,21 @@ def add_route_linux(hosts, gateway):
         print "  " + host + ": ",
         try:
             hip = gethostbyname_ex(host)
+            print hip[2][0]
+            cmd = ('sudo route add -net ' + hip[2][0] +
+                   ' netmask 255.255.255.255 gw ' + gateway)
+            process = subprocess.Popen(cmd,
+                                       shell=True,
+                                       stdout=fnull,
+                                       stderr=subprocess.PIPE)
+            process.wait()
+            gateways, err = process.communicate()
+            if err is None:
+                pass
+            if DEBUG:
+                print "    " + cmd
         except gaierror:
             print host + " is not a valid url, bypassing..."
-        print hip[2][0]
-        cmd = ('sudo route add -net ' + hip[2][0] +
-               ' netmask 255.255.255.255 gw ' + gateway)
-        process = subprocess.Popen(cmd,
-                                   shell=True,
-                                   stdout=fnull,
-                                   stderr=subprocess.PIPE)
-        process.wait()
-        gateways, err = process.communicate()
-        if err is None:
-            pass
-        if DEBUG:
-            print "    " + cmd
 
 
 """
@@ -285,20 +285,20 @@ def add_route_osx(hosts, gateway):
         print "  " + host + ": ",
         try:
             hip = gethostbyname_ex(host)
+            print hip[2][0]
+            cmd = 'sudo route -n add -net ' + hip[2][0] + ' ' + gateway
+            process = subprocess.Popen(cmd,
+                                       shell=True,
+                                       stdout=fnull,
+                                       stderr=subprocess.PIPE)
+            process.wait()
+            gateways, err = process.communicate()
+            if err is None:
+                pass
+            if DEBUG:
+                print "    " + cmd
         except gaierror:
             print host + " is not a valid url, bypassing..."
-        print hip[2][0]
-        cmd = 'sudo route -n add -net ' + hip[2][0] + ' ' + gateway
-        process = subprocess.Popen(cmd,
-                                   shell=True,
-                                   stdout=fnull,
-                                   stderr=subprocess.PIPE)
-        process.wait()
-        gateways, err = process.communicate()
-        if err is None:
-            pass
-        if DEBUG:
-            print "    " + cmd
 
 
 """
