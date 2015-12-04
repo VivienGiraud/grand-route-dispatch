@@ -67,8 +67,12 @@ optional arguments:
   -d, --debug           pretty print debug info
 ```
 
-## Know bugs and issues
+## Known bugs nor issues
 Not yet 🍻
+
+## Known limitations
+- Only works with OSX, for now
+- Only works if the two devices are Wi-Fi and Thunderbolt Ethernet
 
 ## Future features
 - Support Linux (ON GOING)
