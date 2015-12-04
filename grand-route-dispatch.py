@@ -11,8 +11,7 @@
 # TODO: [Linux] Everything similar as OSX
 
 import os
-from socket import gethostbyname_ex, gaierror, inet_ntoa
-import struct
+from socket import gethostbyname_ex, gaierror
 import platform
 import argparse
 import subprocess
@@ -26,59 +25,157 @@ default_file_name = "hostslist.txt"
 WIFI_TAG = "!wifi"
 ETHERNET_TAG = "!ethernet"
 DEBUG = False
-CMD_WIFI = "networksetup -listnetworkserviceorder | awk '/Wi-Fi/{print $5}'"
-CMD_ETHERNET = "networksetup -listnetworkserviceorder | awk '/Thunderbolt Ethernet/{print $6}'"
-CMD_NETSTAT = "netstat -rn | grep 'default' | awk '{print $2 \":\" $6}'"
+CMD_WIFI_OSX = "networksetup -listnetworkserviceorder | awk '/Wi-Fi/{print $5}'"
+CMD_ETHERNET_OSX = "networksetup -listnetworkserviceorder | awk '/Thunderbolt Ethernet/{print $6}'"
+CMD_WIFI_ETHERNET_LINUX = "ifconfig | grep Ethernet | awk '{print $1}'"
+CMD_NETSTAT_OSX = "netstat -rn | grep 'default' | awk '{print $2 \":\" $6}'"
+CMD_NETSTAT_LINUX = "netstat -r | grep 'default' | awk '{print $2 \":\" $8}'"
 
 
-def check_hosts_list(filename):
+"""
+    Linux specific functions
+"""
+
+
+def get_name_devices_linux():
     """
-        Check if filename, given as parameter, point to a real file.
+        Get name of Wi-Fi and Ethernet devices.
 
-        :param filename: name of the file which contain a list of url
-        :return: filename if it exist
+        :return wifi_name: wifi device name
+        :return ethernet_name: ethernet device name
         :rtype: str
 
-        .. note:: probably need a rework
+        :example:
+        >>> print get_name_devices_linux()
+        ('en0', 'en5')
+
+        .. warnings:: LINUX SPECIFIC FUCNTION
+        .. todo:: Implement function
     """
-    if filename is not None:
-        # User give a filename
-        if os.path.isfile(filename):
-            return filename
+    global CMD_WIFI_ETHERNET_LINUX
+    devices_list = []
+    wifi_name = ""
+    ethernet_name = ""
+
+    process = subprocess.Popen(CMD_WIFI_ETHERNET_LINUX,
+                               shell=True,
+                               stdout=subprocess.PIPE)
+    process.wait()
+    devices_name, err = process.communicate()
+    if err is None:
+        pass
+
+    print devices_name
+    devices_list = devices_name.splitlines()
+
+    for device in devices_list:
+        if device.startswith("wlan"):
+            wifi_name = device
+        elif device.startswith("eth"):
+            ethernet_name = device
         else:
-            print "File doesn't exist"
+            print("Unknown device")
             exit(-1)
-    elif os.path.isfile(default_file_name):
-        # Using default hosts list filename
-        return default_file_name
-    else:
-        print "Unable to find " + default_file_name + " in current directory"
-        exit(-2)
+    if wifi_name == "" or ethernet_name == "":
+        print "wifi_name: " + wifi_name
+        print "ethernet_name: " + ethernet_name
+        print "Something went wrong!"
+        exit(-1)
+
+    return wifi_name, ethernet_name
 
 
 def get_default_gateway_linux():
     """
-        Read the default gateway directly from /proc.
+        Get default gateway IP for Wi-Fi and Ethernet.
 
-        :return:
-        :rtype:
+        :return wifi: wifi gateway ip
+        :return ethernet: ethernet gateway ip
+        :rtype: str
 
-        .. note:: I don't have a big-endian machine to test on, so I'm not sure
-                  whether the endianness is dependent on your processor
-                  architecture, but if it is,
-                  replace the < in struct.pack('<L', ... with = so the code
-                  will use the machine's native endianness.
-        .. warnings:: UNTESTED
+        :example:
+        >>> TODO!!!
+
+        .. note:: May be rewrite the mess with lists
         .. warnings:: LINUX SPECIFIC FUCNTION
-        .. todo:: Fill return and rtype in comment
+        .. todo:: Implement error handling instead of just passing
     """
-    with open("/proc/net/route") as fh:
-        for line in fh:
-            fields = line.strip().split()
-            if fields[1] != '00000000' or not int(fields[3], 16) & 2:
-                continue
+    global DEBUG
+    global CMD_NETSTAT_LINUX
+    list_of_gateways = []
 
-            return inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+    process = subprocess.Popen(CMD_NETSTAT_LINUX,
+                               shell=True,
+                               stdout=subprocess.PIPE)
+    process.wait()
+    gateways, err = process.communicate()
+    if err is None:
+        pass
+    list_of_gateways = gateways.splitlines()
+    if len(list_of_gateways) != 2:
+        print "Miss a device!"
+        print "Be sure Wi-Fi and Ethernet are connected"
+        exit(-1)
+
+    wifi_name, ethernet_name = get_name_devices_linux()
+    if wifi_name in list_of_gateways[0]:
+        wifi = list_of_gateways[0].split(":", 1)[0]
+    elif wifi_name in list_of_gateways[1]:
+        wifi = list_of_gateways[1].split(":", 1)[0]
+
+    if ethernet_name in list_of_gateways[0]:
+        ethernet = list_of_gateways[0].split(":", 1)[0]
+    elif ethernet_name in list_of_gateways[1]:
+        ethernet = list_of_gateways[1].split(":", 1)[0]
+
+    if DEBUG:
+        print "Wi-FI gateway address: " + wifi
+        print "Ethernet gateway address: " + ethernet
+
+    return wifi, ethernet
+
+
+def add_route_linux(hosts, gateway):
+    """
+        Resolve url to IP from list file then add route to OS.
+        :param hosts: list of url
+        :param gateway: gateway ip address
+
+        .. warnings:: LINUX SPECIFIC FUCNTION
+        .. todo:: Implement function
+    """
+    global DEBUG
+    # Redirect stdout to /dev/null
+    fnull = open(os.devnull, 'w')
+    for host in hosts:
+        print "  " + host + ": ",
+        try:
+            hip = gethostbyname_ex(host)
+        except gaierror:
+            print host + " is not a valid url, bypassing..."
+        print hip[2][0]
+        cmd = ('sudo route add -net ' + hip[2][0] +
+               ' netmask 255.255.255.255 gw ' + gateway)
+        process = subprocess.Popen(cmd,
+                                   shell=True,
+                                   stdout=fnull,
+                                   stderr=subprocess.PIPE)
+        process.wait()
+        gateways, err = process.communicate()
+        if err is None:
+            pass
+        if DEBUG:
+            print "    " + cmd
+
+
+"""
+    End of Linux specific functions
+"""
+
+
+"""
+    OSX specific functions
+"""
 
 
 def get_name_devices_osx():
@@ -96,10 +193,10 @@ def get_name_devices_osx():
         .. warnings:: OSX SPECIFIC FUCNTION
         .. todo:: Implement error handling instead of just passing
     """
-    global CMD_WIFI
-    global CMD_ETHERNET
+    global CMD_WIFI_OSX
+    global CMD_ETHERNET_OSX
 
-    process = subprocess.Popen(CMD_WIFI,
+    process = subprocess.Popen(CMD_WIFI_OSX,
                                shell=True,
                                stdout=subprocess.PIPE)
     process.wait()
@@ -107,7 +204,7 @@ def get_name_devices_osx():
     if err is None:
         pass
 
-    process = subprocess.Popen(CMD_ETHERNET,
+    process = subprocess.Popen(CMD_ETHERNET_OSX,
                                shell=True,
                                stdout=subprocess.PIPE)
     process.wait()
@@ -138,10 +235,12 @@ def get_default_gateway_osx():
         .. todo:: Implement error handling instead of just passing
     """
     global DEBUG
-    global CMD_NETSTAT
+    global CMD_NETSTAT_OSX
     list_of_gateways = []
 
-    process = subprocess.Popen(CMD_NETSTAT, shell=True, stdout=subprocess.PIPE)
+    process = subprocess.Popen(CMD_NETSTAT_OSX,
+                               shell=True,
+                               stdout=subprocess.PIPE)
     process.wait()
     gateways, err = process.communicate()
     if err is None:
@@ -200,6 +299,11 @@ def add_route_osx(hosts, gateway):
             pass
         if DEBUG:
             print "    " + cmd
+
+
+"""
+    End of OSX specific functions
+"""
 
 
 def file_iterator(fp, device):
@@ -273,11 +377,42 @@ def start_depending_platform():
         add_route_osx(ethernet_hosts, ETHERNET_GATEWAY)
 
     elif platform.system() == "Linux":
-        print "Not yet supported"
-        exit(0)
+        WIFI_GATEWAY, ETHERNET_GATEWAY = get_default_gateway_linux()
+        if WIFI_GATEWAY == "" or ETHERNET_GATEWAY == "":
+            print "Error Wi-Fi or Ethernet address is empty"
+            exit(-1)
+        print "WIFI"
+        add_route_linux(wifi_hosts, WIFI_GATEWAY)
+        print "ETHERNET"
+        add_route_linux(ethernet_hosts, ETHERNET_GATEWAY)
     else:
         print "Unsupported OS"
         exit(0)
+
+
+def check_hosts_list(filename):
+    """
+        Check if filename, given as parameter, point to a real file.
+
+        :param filename: name of the file which contain a list of url
+        :return: filename if it exist
+        :rtype: str
+
+        .. note:: probably need a rework
+    """
+    if filename is not None:
+        # User give a filename
+        if os.path.isfile(filename):
+            return filename
+        else:
+            print "File doesn't exist"
+            exit(-1)
+    elif os.path.isfile(default_file_name):
+        # Using default hosts list filename
+        return default_file_name
+    else:
+        print "Unable to find " + default_file_name + " in current directory"
+        exit(-2)
 
 
 def main():
