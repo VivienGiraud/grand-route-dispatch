@@ -73,6 +73,7 @@ Not yet 🍻
 ## Known limitations
 - Only works with OSX, for now
 - Only works if the two devices are Wi-Fi and Thunderbolt Ethernet
+- Wi-Fi need to be upper Thunderbolt Ethernet in "Service Order"
 
 ## Future features
 - Support Linux (ON GOING)
