@@ -71,18 +71,21 @@ optional arguments:
 Not yet 🍻
 
 ## Known limitations
-- Only works with OSX, for now
+- Only works with OSX and Linux, for now
 - Only works if the two devices are Wi-Fi and Thunderbolt Ethernet
 - Wi-Fi need to be upper Thunderbolt Ethernet in "Service Order"
 
 ## Future features
-- Support Linux (ON GOING)
 - Support Windows (Pull requests are welcome)
 
 ## Thanks
 I would like to thanks [ofaurax](https://github.com/ofaurax) for being the bootstrap of this project!
 
 # Changelog
+## 1.1 - 2015-12-06
+### Added
+- Linux support
+
 ## 1.0 - 2015-12-03
 - First commit
 - Support OS X only for now

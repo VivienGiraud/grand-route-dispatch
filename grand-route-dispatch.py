@@ -27,7 +27,7 @@ ETHERNET_TAG = "!ethernet"
 DEBUG = False
 CMD_WIFI_OSX = "networksetup -listnetworkserviceorder | awk '/Wi-Fi/{print $5}'"
 CMD_ETHERNET_OSX = "networksetup -listnetworkserviceorder | awk '/Thunderbolt Ethernet/{print $6}'"
-CMD_WIFI_ETHERNET_LINUX = "ifconfig | grep Ethernet | awk '{print $1}'"
+CMD_WIFI_ETHERNET_LINUX = "ip link show | grep \"state UP\" | awk '{print $2}'"
 CMD_NETSTAT_OSX = "netstat -rn | grep 'default' | awk '{print $2 \":\" $6}'"
 CMD_NETSTAT_LINUX = "netstat -r | grep 'default' | awk '{print $2 \":\" $8}'"
 
@@ -65,11 +65,10 @@ def get_name_devices_linux():
     if err is None:
         pass
 
-    print devices_name
     devices_list = devices_name.splitlines()
 
     for device in devices_list:
-        if device.startswith("wlan"):
+        if device.startswith("wl"):
             wifi_name = device
         elif device.startswith("eth"):
             ethernet_name = device
@@ -81,6 +80,10 @@ def get_name_devices_linux():
         print "ethernet_name: " + ethernet_name
         print "Something went wrong!"
         exit(-1)
+
+    # Remove last character as it's a ":" and the trailing "\n"
+    wifi_name = wifi_name[:-2].strip()
+    ethernet_name = ethernet_name[:-2].strip()
 
     return wifi_name, ethernet_name
 
