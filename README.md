@@ -82,6 +82,11 @@ Not yet 🍻
 I would like to thanks [ofaurax](https://github.com/ofaurax) for being the bootstrap of this project!
 
 # Changelog
+
+## 1.1.1 - 2015-12-07
+### Added
+- CIDR address support
+
 ## 1.1 - 2015-12-06
 ### Added
 - Linux support

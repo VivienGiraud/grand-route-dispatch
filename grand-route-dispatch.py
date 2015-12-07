@@ -11,6 +11,7 @@
 # TODO: [Linux] Everything similar as OSX
 
 import os
+import re
 from socket import gethostbyname_ex, gaierror
 import platform
 import argparse
@@ -31,6 +32,7 @@ CMD_WIFI_ETHERNET_LINUX = "ip link show | grep \"state UP\" | awk '{print $2}'"
 CMD_NETSTAT_OSX = "netstat -rn | grep 'default' | awk '{print $2 \":\" $6}'"
 CMD_NETSTAT_LINUX = "netstat -r | grep 'default' | awk '{print $2 \":\" $8}'"
 
+IP_CIDR_RE = re.compile(r"(?<!\d\.)(?<!\d)(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?!\d|(?:\.\d))")
 
 """
     Linux specific functions
@@ -287,9 +289,14 @@ def add_route_osx(hosts, gateway):
     for host in hosts:
         print "  " + host + ": ",
         try:
-            hip = gethostbyname_ex(host)
-            print hip[2][0]
-            cmd = 'sudo route -n add -net ' + hip[2][0] + ' ' + gateway
+            if not re.match(IP_CIDR_RE, host):
+                # is not a CIDR IP
+                hip = gethostbyname_ex(host)
+                print hip[2][0]
+                cmd = 'sudo route -n add -net ' + hip[2][0] + ' ' + gateway
+            else:
+                # is a CIDR IP
+                cmd = 'sudo route -n add -net ' + host + ' ' + gateway
             process = subprocess.Popen(cmd,
                                        shell=True,
                                        stdout=fnull,
