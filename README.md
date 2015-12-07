@@ -83,6 +83,10 @@ I would like to thanks [ofaurax](https://github.com/ofaurax) for being the boots
 
 # Changelog
 
+## 1.1.2 - 2015-12-07
+### Changed
+- Merged `*_OSX` & `*_linux` functions to uniques functions, OS separation is now mad inside the function
+
 ## 1.1.1 - 2015-12-07
 ### Added
 - CIDR address support
