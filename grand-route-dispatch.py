@@ -35,6 +35,7 @@ CMD_NETSTAT_OSX = "netstat -rn | grep 'default' | awk '{print $2 \":\" $6}'"
 CMD_NETSTAT_LINUX = "netstat -r | grep 'default' | awk '{print $2 \":\" $8}'"
 CMD_ROUTE_OSX = 'sudo route -n add -net '
 CMD_ROUTE_LINUX = 'sudo route add -net '
+CMD_INTERFACE_TRANSLATOR_OSX = 'networksetup -listnetworkserviceorder | awk \'/en0/\' | cut -f2 -d":" | cut -f1 -d","\''
 NETMASK_OSX = ' '
 NETMASK_LINUX = ' netmask 255.255.255.255 gw '
 PLATFORM = "UNDEFINED"
@@ -108,12 +109,13 @@ def get_name_devices():
             else:
                 print("Unknown device")
                 exit(-1)
-        if wifi_name == "" or ethernet_name == "":
-            print "wifi_name: " + wifi_name
-            print "ethernet_name: " + ethernet_name
-            print "Something went wrong!"
-            exit(-1)
     # End of Linux part
+
+    if wifi_name == "" or ethernet_name == "":
+        print "wifi_name: " + wifi_name
+        print "ethernet_name: " + ethernet_name
+        print "Something went wrong!"
+        exit(-1)
 
     # Remove last character as it's a ")" on OSX and ":" on linux
     # and remove the trailing "\n"
@@ -221,6 +223,9 @@ def add_route(hosts, gateway):
         except gaierror:
             print host + " is not a valid url, bypassing..."
 
+
+def interface_name_to_human_readable_name(interface):
+    pass
 
 """
     End of OS specific functions
