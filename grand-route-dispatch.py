@@ -155,10 +155,16 @@ def add_route_linux(hosts, gateway):
     for host in hosts:
         print "  " + host + ": ",
         try:
-            hip = gethostbyname_ex(host)
-            print hip[2][0]
-            cmd = ('sudo route add -net ' + hip[2][0] +
-                   ' netmask 255.255.255.255 gw ' + gateway)
+            if not re.match(IP_CIDR_RE, host):
+                # is not a CIDR IP
+                hip = gethostbyname_ex(host)
+                print hip[2][0]
+                cmd = ('sudo route add -net ' + hip[2][0] +
+                       ' netmask 255.255.255.255 gw ' + gateway)
+            else:
+                # is a CIDR IP
+                cmd = ('sudo route add -net ' + host +
+                       ' netmask 255.255.255.255 gw ' + gateway)
             process = subprocess.Popen(cmd,
                                        shell=True,
                                        stdout=fnull,
