@@ -2,7 +2,7 @@
 Grand Route Dispatch is a python script for routing specific url to Wi-Fi or Ethernet.  
 This tool is helpful when your company limit access of internal ressources to Ethernet and limit certain services to wifi.
 
-**GRD WORKS ONLY ON OS X, LINUX VERSION IS COMING**
+**GRD WORKS ONLY ON OS X & LINUX!**
 
 ## How it works
 For example, imagine you need to plug your Ethernet cable in order to:  
