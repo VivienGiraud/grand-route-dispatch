@@ -8,7 +8,9 @@
 
 
 # TODO: [OSX] Check if Wi-Fi is upper Ethernet
-# TODO: [Linux] Everything similar as OSX
+# TODO: If default is Wi-Fi don't process Wi-Fi list
+#       else if Ethernet is default don't process Ethernet list
+# TODO: Add -a arg to process list without taking default device in account
 
 import os
 import re
