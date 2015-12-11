@@ -11,6 +11,9 @@
 # TODO: If default is Wi-Fi don't process Wi-Fi list
 #       else if Ethernet is default don't process Ethernet list
 # TODO: Add -a arg to process list without taking default device in account
+# TODO: Add --dns to retrieve dns from opennic.org and
+#       update it (Do nothing by default)
+# TODO: Update to Python 3
 
 import os
 import re
